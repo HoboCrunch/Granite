@@ -1,27 +1,113 @@
-# Code Viewer (Obsidian plugin)
+# Code Viewer — an Obsidian plugin
 
-Read-only viewer for non-markdown files in Obsidian. Renders code with
-CodeMirror 6 syntax highlighting and CSV files as sortable tables.
-Auto-reloads when files change on disk.
+Repository: <https://github.com/HoboCrunch/Granite>
 
-## Install (manual / from source)
+A drop-in viewer and editor for the non-markdown files that already live in
+your vault. Code files (`.js`, `.py`, `.sql`, `.html`, `.json`, `.yaml`, …)
+open with CodeMirror 6 syntax highlighting, line numbers, search, and
+Cmd/Ctrl+S to save. CSV files open as a sortable table with draggable
+column resizers, and a pencil button in the view header flips to a raw-text
+editor when you need to make changes. Auto-reloads when the file changes on
+disk, and prompts before clobbering your unsaved edits.
 
-1. `npm install` (an `.npmrc` sets `legacy-peer-deps=true`, required because Obsidian's CodeMirror peer pin disagrees with the language packs)
-2. `npm run build`
-3. Copy `main.js`, `manifest.json`, and `styles.css` into
-   `<your-vault>/.obsidian/plugins/code-viewer/`.
-4. In Obsidian, enable "Code Viewer" under Settings → Community Plugins.
+Built primarily for the workflow of editing files via the Obsidian terminal
+plugin (or any external tool) while viewing them inside Obsidian.
+
+## Install
+
+### 1 — Make Obsidian show non-markdown files first
+
+By default Obsidian hides anything that isn't `.md`. **Turn this on before
+installing the plugin or none of the file types it supports will appear in
+the file explorer.**
+
+> Open Obsidian → **Settings** → **Files & Links** → toggle on
+> **"Detect all file extensions"** (some Obsidian versions label this
+> "Show all file types").
+
+You only need to do this once per vault.
+
+### 2 — Install the plugin
+
+#### Option A: download a release (recommended)
+
+Grab `main.js`, `manifest.json`, and `styles.css` from the latest release at
+<https://github.com/HoboCrunch/Granite/releases> and copy all three into
+`<your-vault>/.obsidian/plugins/code-viewer/` (create the folder if it
+doesn't exist).
+
+#### Option B: build from source
+
+```bash
+git clone https://github.com/HoboCrunch/Granite.git
+cd Granite
+npm install   # an .npmrc sets legacy-peer-deps=true automatically
+npm run build
+```
+
+Then copy `main.js`, `manifest.json`, and `styles.css` into
+`<your-vault>/.obsidian/plugins/code-viewer/`.
+
+### 3 — Enable it in Obsidian
+
+> Open Obsidian → **Settings** → **Community plugins** → enable
+> **"Code Viewer"**. (If your vault is in Restricted Mode, turn that off
+> first.)
+
+That's it. Click any `.py`, `.json`, `.csv`, `.html`, … file in the file
+explorer.
 
 ## Supported extensions
 
-js, mjs, cjs, jsx, ts, tsx, py, sql, html, htm, css, scss, json, yaml, yml,
-xml, sh, bash, zsh, rb, go, rs, java, c, h, cpp, hpp, cc, toml, csv.
+`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`, `py`, `sql`, `html`, `htm`, `css`,
+`scss`, `json`, `yaml`, `yml`, `xml`, `sh`, `bash`, `zsh`, `rb`, `go`, `rs`,
+`java`, `c`, `h`, `cpp`, `hpp`, `cc`, `toml`, `csv`.
 
-Toggle individual extensions in Settings → Code Viewer.
+Per-extension toggles live at **Settings → Code Viewer**. Disable any
+extension you'd rather Obsidian leave alone (it'll fall back to "no view
+available", as before).
+
+## What's in the editor
+
+**For code files (`CodeView`):**
+
+- CodeMirror 6 with line numbers, fold gutter, bracket matching, active-line
+  highlight, and search (`Cmd/Ctrl+F`).
+- Editable. Cmd/Ctrl+S saves to disk via Obsidian's vault.
+- "Toggle word wrap" action button in the view header.
+- Word wrap on by default.
+
+**For CSV files (`CsvView`):**
+
+- Default: a sortable, scrollable table with sticky header. Click any
+  column header to cycle ascending → descending → unsorted.
+- Drag the right edge of any column header to resize the column live. Width
+  applies to header + body cells.
+- Pencil action button in the view header switches to **text mode** — a
+  full CodeMirror editor over the raw CSV. Edit, Cmd/Ctrl+S, then click
+  the action again to flip back to table view.
+
+**Auto-reload + conflict guard:**
+
+- When the file changes on disk while no edits are pending, the view
+  refreshes automatically (preserving scroll position).
+- When the file changes on disk while you have unsaved edits in Obsidian,
+  a modal asks you to **Keep yours / Reload from disk / Cancel**.
+
+## Limits
+
+- Files larger than 5 MB show a "too large" placeholder; the editor stays
+  read-only for those.
+- Binary files show a "this file appears to be binary" placeholder.
+- CSV table mode caps at the first 10,000 rows; the banner reports the
+  full count. Switch to text mode to inspect/edit rows beyond that limit.
+- Column widths and CSV view-mode (table vs text) reset when you reopen a
+  file — they aren't persisted yet.
 
 ## Manual smoke test matrix
 
-After installing into a real vault, copy `fixtures/*` into the vault and verify:
+After installing into a real vault, copy `fixtures/*` into the vault and
+verify:
 
 - [ ] `sample.js` opens with JS syntax highlighting and line numbers.
 - [ ] `sample.py` opens with Python syntax highlighting.
@@ -31,21 +117,41 @@ After installing into a real vault, copy `fixtures/*` into the vault and verify:
 - [ ] `sample.csv` opens as a table with sticky header.
 - [ ] Clicking a CSV column header sorts ascending; again descending; again unsorted.
 - [ ] Cmd/Ctrl+F inside an open code file opens search.
-- [ ] Editing `sample.py` from a terminal (e.g. `echo "# touch" >> sample.py`)
-      causes the open view to refresh automatically.
+- [ ] Editing `sample.py` from a terminal (`echo "# touch" >> sample.py`) causes the open view to refresh automatically.
 - [ ] Switching Obsidian's theme between light and dark recolors both views.
-- [ ] Disabling `.py` in plugin settings, reloading Obsidian (Cmd/Ctrl+R), then
-      opening a `.py` file shows Obsidian's default "no view" behaviour again.
+- [ ] Disabling `.py` in plugin settings, reloading Obsidian (Cmd/Ctrl+R), then opening a `.py` file shows Obsidian's default "no view" behaviour again.
 - [ ] Edit a code file in Obsidian, press Cmd/Ctrl+S, verify the file on disk has the new content.
-- [ ] Edit a code file (don't save), then run `echo "" >> sample.py` from a terminal — verify the conflict modal appears with three buttons; each button behaves correctly.
+- [ ] Edit a code file (don't save), then run `echo "" >> sample.py` from a terminal — verify the conflict modal appears with three buttons and each button behaves correctly.
 - [ ] In a CSV file, drag the right edge of a column header — column should resize live; matching `<td>` cells should follow.
 - [ ] Click the "Edit as text" action (pencil icon) in a CSV's header — the table should disappear and a CodeMirror editor should appear with the raw CSV text. Edit, Cmd/Ctrl+S, click the action again to return to table view; verify edits show.
 - [ ] Click the "Toggle word wrap" action in a code file with long lines — the editor should switch between wrapping and horizontal-scroll.
 - [ ] Open a binary file (e.g. an image renamed to `.txt`) — the placeholder appears and typing does nothing.
 
-## Limits
+## Development
 
-- Files larger than 5 MB show a "too large" placeholder in the code view.
-- CSVs are capped at the first 10,000 rows; the banner reports the full count.
-- Editing is supported (Cmd/Ctrl+S to save). When the file changes on disk while you have unsaved edits, a conflict modal lets you keep yours, reload from disk, or cancel.
-- CSV defaults to table view. Use the pencil action in the view header to switch to a raw-text editor; switch back to re-parse.
+```bash
+npm install
+npm test          # vitest, currently 16 unit tests for parseCsv + languageMap
+npm run typecheck # tsc --noEmit
+npm run dev       # esbuild watch — rebuilds main.js on change
+npm run build     # production build
+```
+
+Architecture:
+
+- `src/main.ts` — plugin lifecycle, view + extension registration.
+- `src/views/CodeView.ts` — CodeMirror 6 editor for all code file types.
+- `src/views/CsvView.ts` — sortable table + text-mode editor for CSV.
+- `src/views/columnResize.ts` — drag-handle helper for CSV column widths.
+- `src/conflict/ConflictModal.ts` — three-button modal for concurrent-edit resolution.
+- `src/csv/parseCsv.ts` — PapaParse wrapper with row truncation.
+- `src/language/languageMap.ts` — extension → CodeMirror `LanguageSupport` (lazy).
+- `src/language/obsidianTheme.ts` — CodeMirror theme bound to Obsidian CSS variables.
+- `src/settings/` — settings tab + persistence.
+
+Design specs and implementation plans for each release are under
+`docs/superpowers/`.
+
+## License
+
+MIT.
