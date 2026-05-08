@@ -1,9 +1,10 @@
 {
   "id": "code-viewer",
   "name": "Code Viewer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "1.4.0",
-  "description": "Read-only viewer for non-markdown files (js, py, sql, html, csv, and more) with syntax highlighting and auto-reload on disk change.",
-  "author": "",
+  "description": "Viewer and editor for non-markdown files (js, py, sql, html, csv, and more): syntax highlighting, save on Cmd/Ctrl+S, conflict guard on external changes, and CSV table with draggable column resizers.",
+  "author": "HoboCrunch",
+  "authorUrl": "https://github.com/HoboCrunch",
   "isDesktopOnly": false
 }
