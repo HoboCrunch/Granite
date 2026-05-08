@@ -131,7 +131,6 @@ verify:
 
 ```bash
 npm install
-npm test          # vitest, currently 16 unit tests for parseCsv + languageMap
 npm run typecheck # tsc --noEmit
 npm run dev       # esbuild watch — rebuilds main.js on change
 npm run build     # production build
@@ -148,9 +147,6 @@ Architecture:
 - `src/language/languageMap.ts` — extension → CodeMirror `LanguageSupport` (lazy).
 - `src/language/obsidianTheme.ts` — CodeMirror theme bound to Obsidian CSS variables.
 - `src/settings/` — settings tab + persistence.
-
-Design specs and implementation plans for each release are under
-`docs/superpowers/`.
 
 ## License
 

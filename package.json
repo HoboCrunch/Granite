@@ -1,17 +1,15 @@
 {
   "name": "obsidian-code-viewer",
-  "version": "0.1.0",
-  "description": "Read-only viewer for non-markdown files in Obsidian.",
+  "version": "0.2.0",
+  "description": "Viewer and editor for non-markdown files in Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "keywords": ["obsidian-plugin"],
-  "author": "",
+  "author": "HoboCrunch",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -20,8 +18,7 @@
     "esbuild": "^0.20.0",
     "obsidian": "^1.5.7",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@codemirror/commands": "^6.3.3",
