@@ -32,6 +32,8 @@ export class CsvView extends TextFileView {
   private wrapEnabled = true;
   private conflictOpen = false;
   private modeAction: HTMLElement | null = null;
+  private lastSavedText: string | null = null;
+  private suppressNextChange = false;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -71,6 +73,10 @@ export class CsvView extends TextFileView {
     if (this.mode === "text" && this.editor) {
       const currentDoc = this.editor.state.doc.toString();
       if (data === currentDoc) {
+        this.data = data;
+        return;
+      }
+      if (this.lastSavedText !== null && data === this.lastSavedText) {
         this.data = data;
         return;
       }
@@ -118,17 +124,28 @@ export class CsvView extends TextFileView {
       this.mode = "text";
       if (this.modeAction) this.modeAction.setAttribute("aria-label", "View as table");
       this.renderText();
+      this.lastSavedText = this.data ?? "";
     } else {
       this.mode = "table";
       if (this.modeAction) this.modeAction.setAttribute("aria-label", "Edit as text");
       const text = this.editor?.state.doc.toString() ?? this.data ?? "";
       this.teardownEditor();
+      this.lastSavedText = null;
       this.data = text;
       this.parsed = parseCsv(text);
       this.sort = { column: -1, dir: null };
       this.columnWidths.clear();
       this.renderTable();
     }
+  }
+
+  override async save(clear?: boolean): Promise<void> {
+    if (this.mode === "text" && this.editor) {
+      this.lastSavedText = this.editor.state.doc.toString();
+    } else {
+      this.lastSavedText = this.data ?? "";
+    }
+    await super.save(clear);
   }
 
   private renderTable(): void {
@@ -190,10 +207,13 @@ export class CsvView extends TextFileView {
     const seed = this.data ?? "";
 
     const updateListener = EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
-        this.data = update.state.doc.toString();
-        this.requestSave();
+      if (!update.docChanged) return;
+      if (this.suppressNextChange) {
+        this.suppressNextChange = false;
+        return;
       }
+      this.data = update.state.doc.toString();
+      this.requestSave();
     });
 
     const exts: Extension[] = [
@@ -221,6 +241,7 @@ export class CsvView extends TextFileView {
   private replaceEditorDoc(data: string): void {
     if (!this.editor) return;
     const scrollTop = this.editor.scrollDOM.scrollTop;
+    this.suppressNextChange = true;
     this.editor.dispatch({
       changes: { from: 0, to: this.editor.state.doc.length, insert: data },
     });
