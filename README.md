@@ -6,7 +6,7 @@ Auto-reloads when files change on disk.
 
 ## Install (manual / from source)
 
-1. `npm install --legacy-peer-deps`
+1. `npm install` (an `.npmrc` sets `legacy-peer-deps=true`, required because Obsidian's CodeMirror peer pin disagrees with the language packs)
 2. `npm run build`
 3. Copy `main.js`, `manifest.json`, and `styles.css` into
    `<your-vault>/.obsidian/plugins/code-viewer/`.

@@ -14,6 +14,7 @@ export class CodeView extends TextFileView {
   private languageCompartment = new Compartment();
   private currentText = "";
   private currentExt = "";
+  private applyToken = 0;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -79,6 +80,7 @@ export class CodeView extends TextFileView {
 
     const isBinary = looksBinary(data);
     if (isBinary) {
+      this.applyToken++;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: BINARY_PLACEHOLDER },
       });
@@ -87,6 +89,7 @@ export class CodeView extends TextFileView {
     }
 
     if (data.length > MAX_BYTES) {
+      this.applyToken++;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: tooLargeMessage(data.length) },
       });
@@ -112,12 +115,18 @@ export class CodeView extends TextFileView {
   }
 
   private async applyLanguage(ext: string): Promise<void> {
+    const token = ++this.applyToken;
     const loader = getLanguageLoader(ext);
-    if (!loader || !this.editor) return;
+    if (!loader || !this.editor) {
+      if (this.editor && token === this.applyToken) {
+        this.editor.dispatch({ effects: this.languageCompartment.reconfigure([]) });
+      }
+      return;
+    }
     try {
-      const ext_ = await loader();
-      if (!this.editor) return;
-      this.editor.dispatch({ effects: this.languageCompartment.reconfigure(ext_) });
+      const langExtension = await loader();
+      if (!this.editor || token !== this.applyToken) return;
+      this.editor.dispatch({ effects: this.languageCompartment.reconfigure(langExtension) });
     } catch (err) {
       console.warn(`Code Viewer: failed to load language for .${ext}`, err);
     }

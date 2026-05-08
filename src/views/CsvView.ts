@@ -41,9 +41,14 @@ export class CsvView extends TextFileView {
   }
 
   setViewData(data: string, _clear: boolean): void {
+    const prevHeaders = this.parsed.headers;
     this.rawText = data;
     this.parsed = parseCsv(data);
-    this.sort = { column: -1, dir: null };
+    if (!sameHeaders(prevHeaders, this.parsed.headers)) {
+      this.sort = { column: -1, dir: null };
+    } else if (this.sort.column >= this.parsed.headers.length) {
+      this.sort = { column: -1, dir: null };
+    }
     this.render();
   }
 
@@ -125,4 +130,10 @@ export class CsvView extends TextFileView {
     });
     return copy;
   }
+}
+
+function sameHeaders(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
