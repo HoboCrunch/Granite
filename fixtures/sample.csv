@@ -1,0 +1,6 @@
+name,age,city,active
+Alice,30,Brooklyn,true
+Bob,42,Queens,false
+"Carol, the great",27,"New York, NY",true
+Dan,55,Manhattan,true
+Eve,19,Bronx,false
