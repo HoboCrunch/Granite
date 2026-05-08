@@ -47,4 +47,5 @@ After installing into a real vault, copy `fixtures/*` into the vault and verify:
 
 - Files larger than 5 MB show a "too large" placeholder in the code view.
 - CSVs are capped at the first 10,000 rows; the banner reports the full count.
-- Read-only by design. Edit via your normal editor; the viewer auto-reloads.
+- Editing is supported (Cmd/Ctrl+S to save). When the file changes on disk while you have unsaved edits, a conflict modal lets you keep yours, reload from disk, or cancel.
+- CSV defaults to table view. Use the pencil action in the view header to switch to a raw-text editor; switch back to re-parse.
