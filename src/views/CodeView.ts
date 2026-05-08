@@ -32,6 +32,8 @@ export class CodeView extends TextFileView {
   private wrapEnabled = true;
   private placeholderActive = false;
   private conflictOpen = false;
+  private lastSavedText: string | null = null;
+  private suppressNextChange = false;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -54,10 +56,14 @@ export class CodeView extends TextFileView {
     this.contentEl.addClass("code-viewer");
 
     const updateListener = EditorView.updateListener.of((update) => {
-      if (update.docChanged && !this.placeholderActive) {
-        this.data = update.state.doc.toString();
-        this.requestSave();
+      if (!update.docChanged) return;
+      if (this.suppressNextChange) {
+        this.suppressNextChange = false;
+        return;
       }
+      if (this.placeholderActive) return;
+      this.data = update.state.doc.toString();
+      this.requestSave();
     });
 
     const baseExtensions: Extension[] = [
@@ -112,6 +118,13 @@ export class CodeView extends TextFileView {
       return;
     }
 
+    // Self-echo from our own vault.modify: disk now matches what we just wrote,
+    // even if the user has typed more in the editor since. Don't treat as a conflict.
+    if (!this.placeholderActive && this.lastSavedText !== null && data === this.lastSavedText) {
+      this.data = data;
+      return;
+    }
+
     if ((this as any).dirty && !this.placeholderActive && !this.conflictOpen && data !== currentDoc) {
       this.conflictOpen = true;
       const fileName = this.file?.name ?? "file";
@@ -133,6 +146,7 @@ export class CodeView extends TextFileView {
     this.data = "";
     if (this.editor) {
       this.placeholderActive = false;
+      this.suppressNextChange = true;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: "" },
         effects: [
@@ -150,6 +164,7 @@ export class CodeView extends TextFileView {
     if (isBinary) {
       this.applyToken++;
       this.placeholderActive = true;
+      this.suppressNextChange = true;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: BINARY_PLACEHOLDER },
         effects: [
@@ -163,6 +178,7 @@ export class CodeView extends TextFileView {
     if (data.length > MAX_BYTES) {
       this.applyToken++;
       this.placeholderActive = true;
+      this.suppressNextChange = true;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: tooLargeMessage(data.length) },
         effects: [
@@ -175,6 +191,8 @@ export class CodeView extends TextFileView {
 
     this.placeholderActive = false;
     const scrollTop = this.editor.scrollDOM.scrollTop;
+    this.lastSavedText = data;
+    this.suppressNextChange = true;
     this.editor.dispatch({
       changes: { from: 0, to: this.editor.state.doc.length, insert: data },
       effects: this.editableCompartment.reconfigure(EditorView.editable.of(true)),
@@ -192,6 +210,12 @@ export class CodeView extends TextFileView {
       ),
     });
     new Notice(`Code Viewer: word wrap ${this.wrapEnabled ? "on" : "off"}`);
+  }
+
+  override async save(clear?: boolean): Promise<void> {
+    const text = this.editor?.state.doc.toString() ?? this.data ?? "";
+    this.lastSavedText = text;
+    await super.save(clear);
   }
 
   private async applyLanguage(ext: string): Promise<void> {
