@@ -81,3 +81,48 @@
   content: " ▼";
   color: var(--text-accent);
 }
+
+/* v0.2 — column resize handles */
+.csv-viewer-table th {
+  position: relative;
+}
+
+.csv-viewer-th-label {
+  display: inline-block;
+  pointer-events: none;
+}
+
+.csv-viewer-col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  background-color: transparent;
+  transition: background-color 0.1s ease;
+}
+
+.csv-viewer-col-resizer:hover,
+.csv-viewer-col-resizer:active {
+  background-color: var(--text-accent);
+  opacity: 0.4;
+}
+
+/* v0.2 — conflict modal */
+.code-viewer-conflict-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.code-viewer-conflict-buttons button {
+  padding: 6px 12px;
+}
+
+/* v0.2 — CSV text mode editor sizing */
+.csv-viewer .cm-editor {
+  height: 100%;
+}
