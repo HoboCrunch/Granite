@@ -1,0 +1,9 @@
+{
+  "id": "code-viewer",
+  "name": "Code Viewer",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Read-only viewer for non-markdown files (js, py, sql, html, csv, and more) with syntax highlighting and auto-reload on disk change.",
+  "author": "",
+  "isDesktopOnly": false
+}
