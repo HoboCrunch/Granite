@@ -36,6 +36,12 @@ After installing into a real vault, copy `fixtures/*` into the vault and verify:
 - [ ] Switching Obsidian's theme between light and dark recolors both views.
 - [ ] Disabling `.py` in plugin settings, reloading Obsidian (Cmd/Ctrl+R), then
       opening a `.py` file shows Obsidian's default "no view" behaviour again.
+- [ ] Edit a code file in Obsidian, press Cmd/Ctrl+S, verify the file on disk has the new content.
+- [ ] Edit a code file (don't save), then run `echo "" >> sample.py` from a terminal — verify the conflict modal appears with three buttons; each button behaves correctly.
+- [ ] In a CSV file, drag the right edge of a column header — column should resize live; matching `<td>` cells should follow.
+- [ ] Click the "Edit as text" action (pencil icon) in a CSV's header — the table should disappear and a CodeMirror editor should appear with the raw CSV text. Edit, Cmd/Ctrl+S, click the action again to return to table view; verify edits show.
+- [ ] Click the "Toggle word wrap" action in a code file with long lines — the editor should switch between wrapping and horizontal-scroll.
+- [ ] Open a binary file (e.g. an image renamed to `.txt`) — the placeholder appears and typing does nothing.
 
 ## Limits
 
