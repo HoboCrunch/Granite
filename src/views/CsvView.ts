@@ -44,7 +44,7 @@ export class CsvView extends TextFileView {
   }
 
   getDisplayText(): string {
-    return this.file?.name ?? "CSV Viewer";
+    return this.file?.name ?? "Granite";
   }
 
   getIcon(): string {

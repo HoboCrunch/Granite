@@ -1,9 +1,9 @@
 {
   "id": "code-viewer",
-  "name": "Code Viewer",
+  "name": "Granite",
   "version": "0.2.0",
   "minAppVersion": "1.4.0",
-  "description": "Viewer and editor for non-markdown files (js, py, sql, html, csv, and more): syntax highlighting, save on Cmd/Ctrl+S, conflict guard on external changes, and CSV table with draggable column resizers.",
+  "description": "Granite — a viewer and editor for non-markdown files (js, py, sql, html, csv, and more) inside Obsidian. Syntax highlighting, save on Cmd/Ctrl+S, conflict guard, and CSV table with draggable column resizers.",
   "author": "HoboCrunch",
   "authorUrl": "https://github.com/HoboCrunch",
   "isDesktopOnly": false

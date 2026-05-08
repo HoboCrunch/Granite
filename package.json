@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-code-viewer",
+  "name": "obsidian-granite",
   "version": "0.2.0",
-  "description": "Viewer and editor for non-markdown files in Obsidian.",
+  "description": "Granite — a viewer and editor for non-markdown files in Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

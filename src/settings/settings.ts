@@ -14,7 +14,7 @@ export class CodeViewerSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Code Viewer" });
+    containerEl.createEl("h2", { text: "Granite" });
     containerEl.createEl("p", {
       text: "Enable or disable per-extension. Changes take effect after reloading Obsidian (Ctrl/Cmd+R).",
       cls: "setting-item-description",
@@ -38,7 +38,7 @@ export class CodeViewerSettingTab extends PluginSettingTab {
         .onClick(async () => {
           this.plugin.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
           await this.plugin.saveSettings();
-          new Notice("Code Viewer: defaults restored. Reload Obsidian to apply.");
+          new Notice("Granite: defaults restored. Reload Obsidian to apply.");
           this.display();
         }),
     );

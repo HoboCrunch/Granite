@@ -44,7 +44,7 @@ export class CodeView extends TextFileView {
   }
 
   getDisplayText(): string {
-    return this.file?.name ?? "Code Viewer";
+    return this.file?.name ?? "Granite";
   }
 
   getIcon(): string {
@@ -209,7 +209,7 @@ export class CodeView extends TextFileView {
         this.wrapEnabled ? EditorView.lineWrapping : [],
       ),
     });
-    new Notice(`Code Viewer: word wrap ${this.wrapEnabled ? "on" : "off"}`);
+    new Notice(`Granite: word wrap ${this.wrapEnabled ? "on" : "off"}`);
   }
 
   override async save(clear?: boolean): Promise<void> {
@@ -232,7 +232,7 @@ export class CodeView extends TextFileView {
       if (!this.editor || token !== this.applyToken) return;
       this.editor.dispatch({ effects: this.languageCompartment.reconfigure(langExtension) });
     } catch (err) {
-      console.warn(`Code Viewer: failed to load language for .${ext}`, err);
+      console.warn(`Granite: failed to load language for .${ext}`, err);
     }
   }
 }

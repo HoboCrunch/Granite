@@ -1,9 +1,9 @@
-# Code Viewer — an Obsidian plugin
+# Granite
 
-Repository: <https://github.com/HoboCrunch/Granite>
+> Another rock for your Obsidian vault.
 
-A drop-in viewer and editor for the non-markdown files that already live in
-your vault. Code files (`.js`, `.py`, `.sql`, `.html`, `.json`, `.yaml`, …)
+A viewer and editor for the non-markdown files that already live alongside
+your notes. Code files (`.js`, `.py`, `.sql`, `.html`, `.json`, `.yaml`, …)
 open with CodeMirror 6 syntax highlighting, line numbers, search, and
 Cmd/Ctrl+S to save. CSV files open as a sortable table with draggable
 column resizers, and a pencil button in the view header flips to a raw-text
@@ -13,13 +13,15 @@ disk, and prompts before clobbering your unsaved edits.
 Built primarily for the workflow of editing files via the Obsidian terminal
 plugin (or any external tool) while viewing them inside Obsidian.
 
+Repository: <https://github.com/HoboCrunch/Granite>
+
 ## Install
 
 ### 1 — Make Obsidian show non-markdown files first
 
 By default Obsidian hides anything that isn't `.md`. **Turn this on before
-installing the plugin or none of the file types it supports will appear in
-the file explorer.**
+installing Granite or none of the file types it supports will appear in the
+file explorer.**
 
 > Open Obsidian → **Settings** → **Files & Links** → toggle on
 > **"Detect all file extensions"** (some Obsidian versions label this
@@ -27,7 +29,7 @@ the file explorer.**
 
 You only need to do this once per vault.
 
-### 2 — Install the plugin
+### 2 — Install Granite
 
 #### Option A: download a release (recommended)
 
@@ -35,6 +37,9 @@ Grab `main.js`, `manifest.json`, and `styles.css` from the latest release at
 <https://github.com/HoboCrunch/Granite/releases> and copy all three into
 `<your-vault>/.obsidian/plugins/code-viewer/` (create the folder if it
 doesn't exist).
+
+> Note: the on-disk plugin folder is still `code-viewer` — that's the
+> plugin's stable id. The display name in Obsidian is "Granite".
 
 #### Option B: build from source
 
@@ -48,10 +53,16 @@ npm run build
 Then copy `main.js`, `manifest.json`, and `styles.css` into
 `<your-vault>/.obsidian/plugins/code-viewer/`.
 
+#### Option C: BRAT
+
+If you have [BRAT](https://github.com/TfTHacker/obsidian42-brat) installed,
+add the repo `HoboCrunch/Granite` and BRAT will keep you on the latest
+release automatically.
+
 ### 3 — Enable it in Obsidian
 
 > Open Obsidian → **Settings** → **Community plugins** → enable
-> **"Code Viewer"**. (If your vault is in Restricted Mode, turn that off
+> **"Granite"**. (If your vault is in Restricted Mode, turn that off
 > first.)
 
 That's it. Click any `.py`, `.json`, `.csv`, `.html`, … file in the file
@@ -63,13 +74,13 @@ explorer.
 `scss`, `json`, `yaml`, `yml`, `xml`, `sh`, `bash`, `zsh`, `rb`, `go`, `rs`,
 `java`, `c`, `h`, `cpp`, `hpp`, `cc`, `toml`, `csv`.
 
-Per-extension toggles live at **Settings → Code Viewer**. Disable any
-extension you'd rather Obsidian leave alone (it'll fall back to "no view
-available", as before).
+Per-extension toggles live at **Settings → Granite**. Disable any extension
+you'd rather Obsidian leave alone (it'll fall back to "no view available",
+as before).
 
 ## What's in the editor
 
-**For code files (`CodeView`):**
+**For code files:**
 
 - CodeMirror 6 with line numbers, fold gutter, bracket matching, active-line
   highlight, and search (`Cmd/Ctrl+F`).
@@ -77,7 +88,7 @@ available", as before).
 - "Toggle word wrap" action button in the view header.
 - Word wrap on by default.
 
-**For CSV files (`CsvView`):**
+**For CSV files:**
 
 - Default: a sortable, scrollable table with sticky header. Click any
   column header to cycle ascending → descending → unsorted.
