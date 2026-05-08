@@ -1,20 +1,37 @@
-import { TextFileView, type WorkspaceLeaf, type TFile } from "obsidian";
+import { Notice, TextFileView, type WorkspaceLeaf, type TFile } from "obsidian";
 import { EditorState, type Extension, Compartment } from "@codemirror/state";
-import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter, keymap } from "@codemirror/view";
+import {
+  EditorView,
+  lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  keymap,
+} from "@codemirror/view";
 import { bracketMatching, foldGutter, indentOnInput, foldKeymap } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { getLanguageLoader } from "../language/languageMap";
 import { obsidianTheme } from "../language/obsidianTheme";
+import { showConflictModal } from "../conflict/ConflictModal";
 
 export const CODE_VIEW_TYPE = "code-viewer";
+
+const MAX_BYTES = 5 * 1024 * 1024;
+const BINARY_SAMPLE_BYTES = 8192;
+const BINARY_BAD_RATIO = 0.01;
+const BINARY_PLACEHOLDER =
+  "This file appears to be binary and can't be displayed.";
 
 export class CodeView extends TextFileView {
   private editor: EditorView | null = null;
   private languageCompartment = new Compartment();
-  private currentText = "";
+  private wrapCompartment = new Compartment();
+  private editableCompartment = new Compartment();
   private currentExt = "";
   private applyToken = 0;
+  private wrapEnabled = true;
+  private placeholderActive = false;
+  private conflictOpen = false;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -36,6 +53,13 @@ export class CodeView extends TextFileView {
     this.contentEl.empty();
     this.contentEl.addClass("code-viewer");
 
+    const updateListener = EditorView.updateListener.of((update) => {
+      if (update.docChanged && !this.placeholderActive) {
+        this.data = update.state.doc.toString();
+        this.requestSave();
+      }
+    });
+
     const baseExtensions: Extension[] = [
       lineNumbers(),
       foldGutter(),
@@ -46,17 +70,19 @@ export class CodeView extends TextFileView {
       highlightSelectionMatches(),
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, ...foldKeymap]),
-      EditorState.readOnly.of(true),
-      EditorView.editable.of(false),
-      EditorView.lineWrapping,
+      this.editableCompartment.of(EditorView.editable.of(true)),
+      this.wrapCompartment.of(EditorView.lineWrapping),
       this.languageCompartment.of([]),
       obsidianTheme(),
+      updateListener,
     ];
 
     this.editor = new EditorView({
-      state: EditorState.create({ doc: this.currentText, extensions: baseExtensions }),
+      state: EditorState.create({ doc: this.data ?? "", extensions: baseExtensions }),
       parent: this.contentEl,
     });
+
+    this.addAction("wrap-text", "Toggle word wrap", () => this.toggleWrap());
   }
 
   async onClose(): Promise<void> {
@@ -70,48 +96,102 @@ export class CodeView extends TextFileView {
   }
 
   getViewData(): string {
-    return this.currentText;
+    if (this.placeholderActive) return this.data ?? "";
+    return this.editor?.state.doc.toString() ?? this.data ?? "";
   }
 
   setViewData(data: string, _clear: boolean): void {
-    this.currentText = data;
+    if (!this.editor) {
+      this.data = data;
+      return;
+    }
 
+    const currentDoc = this.editor.state.doc.toString();
+    if (!this.placeholderActive && data === currentDoc) {
+      this.data = data;
+      return;
+    }
+
+    if ((this as any).dirty && !this.placeholderActive && !this.conflictOpen && data !== currentDoc) {
+      this.conflictOpen = true;
+      const fileName = this.file?.name ?? "file";
+      void showConflictModal(this.app, fileName).then((choice) => {
+        this.conflictOpen = false;
+        if (choice === "reload") {
+          this.replaceDoc(data);
+          this.data = data;
+        }
+      });
+      return;
+    }
+
+    this.replaceDoc(data);
+    this.data = data;
+  }
+
+  clear(): void {
+    this.data = "";
+    if (this.editor) {
+      this.placeholderActive = false;
+      this.editor.dispatch({
+        changes: { from: 0, to: this.editor.state.doc.length, insert: "" },
+        effects: [
+          this.languageCompartment.reconfigure([]),
+          this.editableCompartment.reconfigure(EditorView.editable.of(true)),
+        ],
+      });
+    }
+  }
+
+  private replaceDoc(data: string): void {
     if (!this.editor) return;
 
     const isBinary = looksBinary(data);
     if (isBinary) {
       this.applyToken++;
+      this.placeholderActive = true;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: BINARY_PLACEHOLDER },
+        effects: [
+          this.languageCompartment.reconfigure([]),
+          this.editableCompartment.reconfigure(EditorView.editable.of(false)),
+        ],
       });
-      this.editor.dispatch({ effects: this.languageCompartment.reconfigure([]) });
       return;
     }
 
     if (data.length > MAX_BYTES) {
       this.applyToken++;
+      this.placeholderActive = true;
       this.editor.dispatch({
         changes: { from: 0, to: this.editor.state.doc.length, insert: tooLargeMessage(data.length) },
+        effects: [
+          this.languageCompartment.reconfigure([]),
+          this.editableCompartment.reconfigure(EditorView.editable.of(false)),
+        ],
       });
-      this.editor.dispatch({ effects: this.languageCompartment.reconfigure([]) });
       return;
     }
 
+    this.placeholderActive = false;
     const scrollTop = this.editor.scrollDOM.scrollTop;
     this.editor.dispatch({
       changes: { from: 0, to: this.editor.state.doc.length, insert: data },
+      effects: this.editableCompartment.reconfigure(EditorView.editable.of(true)),
     });
     this.editor.scrollDOM.scrollTop = scrollTop;
-
     this.applyLanguage(this.currentExt);
   }
 
-  clear(): void {
-    this.currentText = "";
-    if (this.editor) {
-      this.editor.dispatch({ changes: { from: 0, to: this.editor.state.doc.length, insert: "" } });
-      this.editor.dispatch({ effects: this.languageCompartment.reconfigure([]) });
-    }
+  private toggleWrap(): void {
+    if (!this.editor) return;
+    this.wrapEnabled = !this.wrapEnabled;
+    this.editor.dispatch({
+      effects: this.wrapCompartment.reconfigure(
+        this.wrapEnabled ? EditorView.lineWrapping : [],
+      ),
+    });
+    new Notice(`Code Viewer: word wrap ${this.wrapEnabled ? "on" : "off"}`);
   }
 
   private async applyLanguage(ext: string): Promise<void> {
@@ -133,23 +213,18 @@ export class CodeView extends TextFileView {
   }
 }
 
-const MAX_BYTES = 5 * 1024 * 1024;
-const BINARY_PLACEHOLDER =
-  "This file appears to be binary and can't be displayed.";
-
 function tooLargeMessage(bytes: number): string {
   const mb = (bytes / (1024 * 1024)).toFixed(1);
   return `File too large to display (${mb} MB; 5 MB limit). Open it in your terminal.`;
 }
 
 function looksBinary(s: string): boolean {
-  // Sample the first 8KB; if more than 1% of chars are NUL or replacement char, treat as binary.
-  const sample = s.slice(0, 8192);
+  const sample = s.slice(0, BINARY_SAMPLE_BYTES);
   if (sample.length === 0) return false;
   let bad = 0;
   for (let i = 0; i < sample.length; i++) {
     const c = sample.charCodeAt(i);
     if (c === 0 || c === 0xfffd) bad++;
   }
-  return bad / sample.length > 0.01;
+  return bad / sample.length > BINARY_BAD_RATIO;
 }
